@@ -1,18 +1,12 @@
 package com.software.login
 
-import android.graphics.Bitmap
-import com.software.biliapp.domain.model.QrCodeDataDomain
-import com.software.biliapp.domain.model.QrPollDataDomain
+import com.software.core.model.QrPollStatus
 
 data class BiliLoginUiState(
-    val qrCodeData: QrCodeDataDomain? = null,
-    val qrPollData: QrPollDataDomain? = null,
-
-    val qrBitmap: Bitmap? = null,
-
-    val currentUsername: String = "",
-    val currentPassword: String = "",
-    val currentPasswordError: String? = null,
-    val currentConfirmPassword: String = "",
-    val currentConfirmPasswordError: String? = null,
+    /** 二维码内容 URL（Bitmap 由 UI 层按需生成，不放进状态） */
+    val qrUrl: String? = null,
+    /** 轮询状态（状态机已下沉到 core:model） */
+    val qrStatus: QrPollStatus = QrPollStatus.WAITING_SCAN,
+    /** 是否正在获取二维码 */
+    val isQrLoading: Boolean = false,
 )

@@ -1,13 +1,11 @@
 package com.software.login
 
-sealed class BiliLoginUiEvent {
-    data class UpdateCurrentUsername(val username: String) : BiliLoginUiEvent()
-    data class UpdateCurrentPassword(val password: String) : BiliLoginUiEvent()
-    object BiliPollQrCodeStatus : BiliLoginUiEvent()
-    object BiliQrCodeData : BiliLoginUiEvent()
+sealed interface BiliLoginUiEvent {
+    /** 刷新二维码并重新开始轮询 */
+    data object RefreshQrCode : BiliLoginUiEvent
 }
 
-sealed class BiliLoginUiEffect {
-    data class ShowToast(val message: String) : BiliLoginUiEffect()
-    object NavigateToRecommend : BiliLoginUiEffect()
+sealed interface BiliLoginUiEffect {
+    data class ShowToast(val message: String) : BiliLoginUiEffect
+    data object NavigateToHome : BiliLoginUiEffect
 }

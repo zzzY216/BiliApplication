@@ -24,7 +24,10 @@ dependencyResolutionManagement {
 
 rootProject.name = "BiliApplication"
 include(":app")
-include(":core")
+include(":core:model")
+include(":core:common")
+include(":core:network")
+include(":core:data")
 include(":features:designsystem")
 include(":features:home")
 include(":features:login")

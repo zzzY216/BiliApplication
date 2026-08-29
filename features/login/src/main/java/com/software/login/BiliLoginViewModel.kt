@@ -1,12 +1,9 @@
 package com.software.login
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.software.biliapp.domain.usecase.BiliPollQrCodeStatusUseCase
-import com.software.biliapp.domain.usecase.BiliQrCodeDataUseCase
-import com.software.core.mongo.bili.BiliSessionManager
-import com.software.core.util.ZQRCodeUtils
+import com.software.core.data.repository.AuthRepository
+import com.software.core.model.QrPollStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -23,10 +20,9 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class BiliLoginViewModel @Inject constructor(
-    private val biliQrCodeDataUseCase: BiliQrCodeDataUseCase,
-    private val biliPollQrCodeStatusUseCase: BiliPollQrCodeStatusUseCase,
-    private val sessionManager: BiliSessionManager
-) : ViewModel(){
+    private val authRepository: AuthRepository,
+) : ViewModel() {
+
     private val _uiState = MutableStateFlow(BiliLoginUiState())
     val uiState = _uiState.asStateFlow()
 
@@ -34,6 +30,7 @@ class BiliLoginViewModel @Inject constructor(
     val uiEffect = _uiEffect.receiveAsFlow()
 
     private var pollJob: Job? = null
+    private var lastToastStatus: QrPollStatus? = null
 
     init {
         checkLoginStatus()
@@ -41,143 +38,84 @@ class BiliLoginViewModel @Inject constructor(
 
     fun onEvent(event: BiliLoginUiEvent) {
         when (event) {
-            BiliLoginUiEvent.BiliQrCodeData -> biliQrCodeData()
-            is BiliLoginUiEvent.UpdateCurrentPassword -> updateCurrentPassword(event.password)
-            is BiliLoginUiEvent.UpdateCurrentUsername -> updateCurrentUsername(event.username)
-            is BiliLoginUiEvent.BiliPollQrCodeStatus -> {
-                val key = _uiState.value.qrCodeData?.qrcode_key
-                if (!key.isNullOrEmpty()) {
-                    biliPollQrCodeStatus(key)
-                }
-            }
+            BiliLoginUiEvent.RefreshQrCode -> refreshQrCode()
         }
     }
 
-    private fun updateCurrentUsername(username: String) {
-        _uiState.update {
-            it.copy(currentUsername = username)
-        }
-    }
-
-    private fun updateCurrentPassword(password: String) {
-        _uiState.update {
-            it.copy(currentPassword = password)
-        }
-    }
-
-    private fun biliPollQrCodeStatus(qrcodeKey: String) {
+    private fun refreshQrCode() {
         pollJob?.cancel()
-        Log.d("QRCode", "biliPollQrCodeStatus() 函数被触发")
-        pollJob = viewModelScope.launch {
-            var lastCode: Int? = null
-            while (isActive) {
-                try {
-                    val response =
-                        biliPollQrCodeStatusUseCase.invoke(
-                            uiState.value.qrCodeData?.qrcode_key ?: ""
-                        )
-                    response.fold(
-                        onSuccess = { qrPollDataDomain ->
-                            val currentCode = qrPollDataDomain.data.code
-                            if (currentCode != lastCode) {
-                                when (currentCode) {
-                                    0 -> {
-                                        Log.d("QRCode", "登录成功")
-                                        Log.d(
-                                            "QRCode",
-                                            "准备存入 Token: ${qrPollDataDomain.data.refreshToken}"
-                                        )
-                                        sessionManager.saveLoginSession(
-                                            url = qrPollDataDomain.data.url ?: "",
-                                            refreshToken = qrPollDataDomain.data.refreshToken ?: ""
-                                        )
-                                        Log.d("QRCode", "saveRefreshToken 函数执行完毕")
-                                        _uiEffect.send(BiliLoginUiEffect.ShowToast("登录成功"))
-                                        _uiEffect.send(BiliLoginUiEffect.NavigateToRecommend)
-                                        pollJob?.cancel()
-                                    }
-
-                                    86101 -> {}
-                                    86090 -> {
-                                        _uiEffect.send(BiliLoginUiEffect.ShowToast("已扫码，请在手机确认登录"))
-                                    }
-
-                                    86038 -> {
-                                        Log.d("QRCode", "二维码状态已过期")
-                                        _uiEffect.send(BiliLoginUiEffect.ShowToast("二维码状态已过期"))
-                                        pollJob?.cancel()
-                                    }
-
-                                    else -> {
-                                        Log.d(
-                                            "QRCode",
-                                            "等待扫码/确认中 ... code = ${qrPollDataDomain.code}"
-                                        )
-                                    }
-                                }
-                                lastCode = currentCode
-                            }
-                        },
-                        onFailure = {
-                            _uiState.update {
-                                it.copy(
-                                    qrPollData = null
-                                )
-                            }
-                            Log.d("QRCode", "二维码状态查询失败: e ${it.message}")
-                            _uiEffect.send(BiliLoginUiEffect.ShowToast("二维码状态查询失败"))
-                        }
-                    )
-                } catch (e: Exception) {
-                    Log.e("QRCode", "二维码状态查询失败: ${e.message}")
+        lastToastStatus = null
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(isQrLoading = true, qrStatus = QrPollStatus.WAITING_SCAN)
+            }
+            authRepository.getQrCode()
+                .onSuccess { qrCodeData ->
+                    _uiState.update { it.copy(qrUrl = qrCodeData.url, isQrLoading = false) }
+                    startPolling(qrCodeData.qrcode_key)
                 }
+                .onFailure {
+                    _uiState.update { it.copy(isQrLoading = false) }
+                    _uiEffect.send(BiliLoginUiEffect.ShowToast("二维码生成失败"))
+                }
+        }
+    }
+
+    private fun startPolling(qrcodeKey: String) {
+        pollJob?.cancel()
+        pollJob = viewModelScope.launch {
+            while (isActive) {
+                authRepository.pollQrCodeStatus(qrcodeKey)
+                    .onSuccess { pollData ->
+                        val status = QrPollStatus.fromCode(pollData.code)
+                        _uiState.update { it.copy(qrStatus = status) }
+                        when (status) {
+                            QrPollStatus.SUCCESS -> {
+                                authRepository.saveSession(
+                                    url = pollData.data.url ?: "",
+                                    refreshToken = pollData.data.refreshToken ?: ""
+                                )
+                                _uiEffect.send(BiliLoginUiEffect.ShowToast("登录成功"))
+                                _uiEffect.send(BiliLoginUiEffect.NavigateToHome)
+                                pollJob?.cancel()
+                            }
+
+                            QrPollStatus.WAITING_CONFIRM -> {
+                                if (lastToastStatus != QrPollStatus.WAITING_CONFIRM) {
+                                    _uiEffect.send(BiliLoginUiEffect.ShowToast("已扫码，请在手机确认登录"))
+                                    lastToastStatus = QrPollStatus.WAITING_CONFIRM
+                                }
+                            }
+
+                            QrPollStatus.EXPIRED -> {
+                                if (lastToastStatus != QrPollStatus.EXPIRED) {
+                                    _uiEffect.send(BiliLoginUiEffect.ShowToast("二维码已过期，请刷新"))
+                                    lastToastStatus = QrPollStatus.EXPIRED
+                                }
+                                pollJob?.cancel()
+                            }
+
+                            QrPollStatus.WAITING_SCAN -> Unit
+                        }
+                    }
+                    .onFailure {
+                        _uiEffect.send(BiliLoginUiEffect.ShowToast("二维码状态查询失败"))
+                    }
                 delay(3000.milliseconds)
             }
         }
     }
 
-    private fun biliQrCodeData() {
+    override fun onCleared() {
         pollJob?.cancel()
-        viewModelScope.launch {
-            val response = biliQrCodeDataUseCase.invoke()
-            response.fold(
-                onSuccess = { qrCodeDataDomain ->
-                    _uiState.update {
-                        it.copy(
-                            qrCodeData = qrCodeDataDomain
-                        )
-                    }
-                    val bitmap = ZQRCodeUtils.generateQRCode(qrCodeDataDomain.url)
-                    _uiState.update {
-                        it.copy(
-                            qrBitmap = bitmap
-                        )
-                    }
-                    _uiEffect.send(BiliLoginUiEffect.ShowToast("二维码生成成功"))
-                    biliPollQrCodeStatus(qrCodeDataDomain.qrcode_key)
-                },
-                onFailure = { errorMessage ->
-                    _uiState.update {
-                        it.copy(
-                            qrCodeData = null
-                        )
-                    }
-                    Log.d("QRCode", "二维码生成失败: $errorMessage")
-                    _uiEffect.send(BiliLoginUiEffect.ShowToast("二维码生成失败ViewModel"))
-                }
-            )
-        }
+        super.onCleared()
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        pollJob?.cancel()
-    }
     private fun checkLoginStatus() {
         viewModelScope.launch {
-            val cookie = sessionManager.cookieFlow.first()
+            val cookie = authRepository.cookieFlow().first()
             if (cookie.isNotEmpty()) {
-                _uiEffect.send(BiliLoginUiEffect.NavigateToRecommend)
+                _uiEffect.send(BiliLoginUiEffect.NavigateToHome)
             }
         }
     }
