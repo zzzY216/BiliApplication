@@ -1,15 +1,27 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+# --- Gradle / AGP 构建产物（注意：build/ 不带前导斜杠，匹配任意层级）---
+.gradle/
+build/
+.kotlin/
+
+# --- 本地配置（SDK 路径等，因人而异，禁止入库）---
 local.properties
+
+# --- IDE ---
+.idea/
+*.iml
+.fleet/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# --- 操作系统 / 编辑器 ---
+.DS_Store
+Thumbs.db
+*.log
+
+# --- 密钥 / 证书（禁止入库）---
+*.jks
+*.keystore
+
+# --- 性能分析文件 ---
+*.hprof
