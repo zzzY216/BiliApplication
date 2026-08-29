@@ -27,6 +27,26 @@ class BiliSessionManager(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /**
+     * 注意：Kotlin 按源码顺序初始化属性/init 块。
+     * 以下 Flow 必须声明在 init 的 launch 之前，否则 IO 线程可能在
+     * 构造函数尚未完成时读到 null 字段（曾导致 first() NPE 崩溃）。
+     */
+    val jctFlow: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[BILI_JCT] ?: ""
+    }
+
+    val cookieFlow: Flow<String> = context.dataStore.data.map { preferences ->
+        val sd = preferences[SESSDATA] ?: ""
+        val bjct = preferences[BILI_JCT] ?: ""
+        val uid = preferences[DEDE_USER_ID] ?: ""
+        if (sd.isNotEmpty()) {
+            buildCookie(sd, bjct, uid)
+        } else {
+            ""
+        }
+    }
+
+    /**
      * Cookie 内存镜像：OkHttp 拦截器同步读取，避免每次请求阻塞读 DataStore。
      * 启动时异步加载一次，登录/登出时同步更新。
      */
@@ -35,7 +55,11 @@ class BiliSessionManager(
         private set
 
     init {
-        scope.launch { cachedCookie = cookieFlow.first() }
+        scope.launch {
+            // 读盘失败（IO/数据损坏）时保持空 Cookie，不让协程异常击穿进程
+            runCatching { cookieFlow.first() }
+                .onSuccess { cachedCookie = it }
+        }
     }
 
     suspend fun saveLoginSession(url: String, refreshToken: String) {
@@ -55,21 +79,6 @@ class BiliSessionManager(
     suspend fun clearSession() {
         context.dataStore.edit { it.clear() }
         cachedCookie = ""
-    }
-
-    val jctFlow: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[BILI_JCT] ?: ""
-    }
-
-    val cookieFlow: Flow<String> = context.dataStore.data.map { preferences ->
-        val sd = preferences[SESSDATA] ?: ""
-        val bjct = preferences[BILI_JCT] ?: ""
-        val uid = preferences[DEDE_USER_ID] ?: ""
-        if (sd.isNotEmpty()) {
-            buildCookie(sd, bjct, uid)
-        } else {
-            ""
-        }
     }
 
     private fun buildCookie(sessData: String, biliJct: String, userId: String): String =
