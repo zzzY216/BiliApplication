@@ -123,4 +123,4 @@ fun MusicTopBar(
     }
 }
 
-val defaultMusicTabs = listOf("推荐", "动漫", "广播剧", "听书")
+val defaultMusicTabs = listOf("直播", "推荐", "热门", "动画", "影视", "新征程")

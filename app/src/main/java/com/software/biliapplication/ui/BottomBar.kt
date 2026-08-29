@@ -2,9 +2,9 @@ package com.software.biliapplication.ui
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -34,8 +34,8 @@ data class TopLevelDestination(
     companion object {
         val all = listOf(
             TopLevelDestination(HomeRoute, "首页", Icons.Default.Home),
-            TopLevelDestination(DiscoverRoute, "推荐", Icons.Default.PlayArrow),
-            TopLevelDestination(LibraryRoute, "收藏", Icons.Default.List),
+            TopLevelDestination(DiscoverRoute, "直播", Icons.Default.PlayArrow),
+            TopLevelDestination(LibraryRoute, "会员购", Icons.Default.ShoppingCart),
             TopLevelDestination(ProfileRoute, "我的", Icons.Default.Person),
         )
     }
