@@ -28,9 +28,8 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import com.software.core.model.RecommendItem
-import com.software.core.model.navigation.AnimeDetailRoute
 import com.software.home.anime.AnimeTabContent
-import com.software.home.topbar.MusicTopBar
+import com.software.home.topbar.BiliTopBar
 
 @Composable
 fun BiliHomeRoute(
@@ -53,7 +52,7 @@ fun BiliHomeScreen(
     // 顶部 Tab 选中状态提升到这里，按 Tab 切换内容（内容槽模式）
     var selectedTab by remember { mutableIntStateOf(0) }
     Column(modifier = modifier.fillMaxSize()) {
-        MusicTopBar(
+        BiliTopBar(
             selectedTabIndex = selectedTab,
             onTabSelected = { selectedTab = it },
         )

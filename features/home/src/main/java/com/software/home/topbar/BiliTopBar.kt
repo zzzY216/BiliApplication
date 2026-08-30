@@ -35,7 +35,7 @@ import com.software.designsystem.BiliColors
  * 选中状态提升到父组件（状态提升），由父组件决定切换哪块内容。
  */
 @Composable
-fun MusicTopBar(
+fun BiliTopBar(
     tabs: List<String> = defaultMusicTabs,
     selectedTabIndex: Int,
     onTabSelected: (Int) -> Unit,
@@ -89,6 +89,7 @@ fun MusicTopBar(
                     onClick = { onTabSelected(index) },
                     modifier = Modifier
                         .height(48.dp)
+                        .width(24.dp)
                         .padding(horizontal = 4.dp)
                         .clip(RoundedCornerShape(8.dp)),
                     content = {
