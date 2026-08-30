@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.software.core.data.repository.VideoRepository
+import com.software.core.model.PopularItem
 import com.software.core.model.RecommendItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -20,6 +21,11 @@ class BiliHomeViewModel @Inject constructor(
     /** 推荐流（Paging3）：由仓储提供，ViewModel 持有缓存，旋转/返回不重复请求 */
     val recommendPagingData: Flow<PagingData<RecommendItem>> =
         videoRepository.getRecommendVideoPagingFlow()
+            .cachedIn(viewModelScope)
+
+    /** 热门流（Paging3）：热门 Tab 使用，懒加载 */
+    val popularPagingData: Flow<PagingData<PopularItem>> =
+        videoRepository.getPopularListPagingFlow()
             .cachedIn(viewModelScope)
 
     private val _uiState = MutableStateFlow(BiliHomeUiState())

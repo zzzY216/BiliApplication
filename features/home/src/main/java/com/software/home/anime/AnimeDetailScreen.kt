@@ -33,6 +33,7 @@ import coil3.compose.AsyncImage
 import com.software.core.model.pgc.PgcEpisode
 import com.software.core.model.pgc.SeasonDetail
 import com.software.designsystem.BiliColors
+import com.software.home.util.formatShortCount
 
 @Composable
 fun AnimeDetailRoute(

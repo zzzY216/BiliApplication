@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  网络安全配置：B站图床（*.hdslb.com）部分封面为 http:// 明文地址，
+  仅对 hdslb.com 放行明文流量（其余域名保持 Android 默认 https-only）。
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">hdslb.com</domain>
+    </domain-config>
+</network-security-config>

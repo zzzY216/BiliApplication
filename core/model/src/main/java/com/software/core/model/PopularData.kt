@@ -18,7 +18,8 @@ data class PopularItem(
     val pic: String,
     val title: String,
     val owner: PopularDataOwner,
-    val stat: PopularDataStat
+    val stat: PopularDataStat,
+    val dimension: VideoDimension? = null   // 瀑布流宽高比
 )
 
 @Serializable

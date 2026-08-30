@@ -60,6 +60,11 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.dagger.hilt.android.compiler)
 
+    // 图片加载（全局 ImageLoader：hdslb 图床防盗链 Referer + networkSecurityConfig）
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+    implementation(libs.okhttp)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
