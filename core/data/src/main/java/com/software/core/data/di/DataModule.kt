@@ -2,6 +2,8 @@ package com.software.core.data.di
 
 import com.software.core.data.repository.AuthRepository
 import com.software.core.data.repository.AuthRepositoryImpl
+import com.software.core.data.repository.BangumiRepository
+import com.software.core.data.repository.BangumiRepositoryImpl
 import com.software.core.data.repository.UserRepository
 import com.software.core.data.repository.UserRepositoryImpl
 import com.software.core.data.repository.VideoRepository
@@ -29,4 +31,8 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindVideoRepository(impl: VideoRepositoryImpl): VideoRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBangumiRepository(impl: BangumiRepositoryImpl): BangumiRepository
 }

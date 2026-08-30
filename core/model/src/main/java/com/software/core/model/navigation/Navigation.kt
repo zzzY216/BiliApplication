@@ -16,3 +16,7 @@ object LibraryRoute
 
 @Serializable
 object ProfileRoute
+
+/** 动漫详情页（番剧/国创） */
+@Serializable
+data class AnimeDetailRoute(val seasonId: Long)

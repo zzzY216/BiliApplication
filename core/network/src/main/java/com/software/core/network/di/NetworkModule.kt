@@ -6,6 +6,7 @@ import com.software.core.network.BiliAppApiService
 import com.software.core.network.BiliAppNetwork
 import com.software.core.network.BiliLoginApiService
 import com.software.core.network.BiliLoginNetwork
+import com.software.core.network.PgcApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -100,5 +101,13 @@ object NetworkModule {
     @Singleton
     fun provideBiliLoginApiService(@BiliLoginNetwork retrofit: Retrofit): BiliLoginApiService {
         return retrofit.create(BiliLoginApiService::class.java)
+    }
+
+    /** 动漫（番剧/国创）PGC 域接口，复用 api.bilibili.com 通道。 */
+    @BiliApiNetwork
+    @Provides
+    @Singleton
+    fun providePgcApiService(@BiliApiNetwork retrofit: Retrofit): PgcApiService {
+        return retrofit.create(PgcApiService::class.java)
     }
 }

@@ -21,10 +21,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,16 +31,17 @@ import androidx.compose.ui.unit.sp
 import com.software.designsystem.BiliColors
 
 /**
- * 首页顶部音乐分类栏（博客/有声书/广播剧/听书）。
- * 原实现硬编码颜色与不可配置回调，这里收敛为 Token + 可注入回调。
+ * 首页顶部音乐分类栏。
+ * 选中状态提升到父组件（状态提升），由父组件决定切换哪块内容。
  */
 @Composable
 fun MusicTopBar(
     tabs: List<String> = defaultMusicTabs,
+    selectedTabIndex: Int,
+    onTabSelected: (Int) -> Unit,
     onMenuClick: () -> Unit = {},
     onAddClick: () -> Unit = {},
 ) {
-    var selectedIndex by remember { mutableIntStateOf(0) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -59,15 +56,15 @@ fun MusicTopBar(
             )
         }
         ScrollableTabRow(
-            selectedTabIndex = selectedIndex,
+            selectedTabIndex = selectedTabIndex,
             modifier = Modifier.weight(1f),
             containerColor = Color.Transparent,
             contentColor = BiliColors.TextPrimary,
             edgePadding = 0.dp,
             divider = {},
             indicator = { tabPositions ->
-                if (selectedIndex < tabPositions.size) {
-                    val currentTabPosition = tabPositions[selectedIndex]
+                if (selectedTabIndex < tabPositions.size) {
+                    val currentTabPosition = tabPositions[selectedTabIndex]
                     Box(
                         modifier = Modifier
                             .tabIndicatorOffset(currentTabPosition)
@@ -86,10 +83,10 @@ fun MusicTopBar(
             }
         ) {
             tabs.forEachIndexed { index, title ->
-                val isSelected = selectedIndex == index
+                val isSelected = selectedTabIndex == index
                 Tab(
                     selected = isSelected,
-                    onClick = { selectedIndex = index },
+                    onClick = { onTabSelected(index) },
                     modifier = Modifier
                         .height(48.dp)
                         .padding(horizontal = 4.dp)

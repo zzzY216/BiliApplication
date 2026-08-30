@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import com.software.biliapplication.ui.BottomBar
 import com.software.biliapplication.ui.PlaceholderScreen
 import com.software.biliapplication.ui.TopLevelDestination
+import com.software.core.model.navigation.AnimeDetailRoute
 import com.software.core.model.navigation.DiscoverRoute
 import com.software.core.model.navigation.HomeRoute
 import com.software.core.model.navigation.LibraryRoute
@@ -57,7 +58,13 @@ fun AppNavHost(navController: NavHostController) {
                     }
                 }
             )
-            homeNavGraph()
+            homeNavGraph(
+                onSeasonClick = { seasonId ->
+                    navController.navigate(AnimeDetailRoute(seasonId)) {
+                        launchSingleTop = true
+                    }
+                }
+            )
             composable<DiscoverRoute> { PlaceholderScreen(text = "发现（开发中）") }
             composable<LibraryRoute> { PlaceholderScreen(text = "收藏（开发中）") }
             composable<ProfileRoute> { PlaceholderScreen(text = "我的（开发中）") }

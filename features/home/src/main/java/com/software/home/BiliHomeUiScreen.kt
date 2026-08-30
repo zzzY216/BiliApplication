@@ -13,6 +13,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -24,27 +28,62 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil3.compose.AsyncImage
 import com.software.core.model.RecommendItem
+import com.software.core.model.navigation.AnimeDetailRoute
+import com.software.home.anime.AnimeTabContent
 import com.software.home.topbar.MusicTopBar
 
 @Composable
 fun BiliHomeRoute(
+    onSeasonClick: (Long) -> Unit = {},
     viewModel: BiliHomeViewModel = hiltViewModel(),
 ) {
     val items = viewModel.recommendPagingData.collectAsLazyPagingItems()
-    BiliHomeScreen(items = items)
+    BiliHomeScreen(
+        items = items,
+        onSeasonClick = onSeasonClick,
+    )
 }
 
 @Composable
 fun BiliHomeScreen(
     items: LazyPagingItems<RecommendItem>,
+    onSeasonClick: (Long) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    // 顶部 Tab 选中状态提升到这里，按 Tab 切换内容（内容槽模式）
+    var selectedTab by remember { mutableIntStateOf(0) }
     Column(modifier = modifier.fillMaxSize()) {
-        // 顶部音乐分类栏（首页专属）
-        MusicTopBar()
-        RecommendFeed(
-            items = items,
-            modifier = Modifier.weight(1f)
+        MusicTopBar(
+            selectedTabIndex = selectedTab,
+            onTabSelected = { selectedTab = it },
+        )
+        when (selectedTab) {
+            // 直播/推荐/热门 → 现有推荐流（各 Tab 独立内容为后续迭代）
+            0, 1, 2 -> RecommendFeed(
+                items = items,
+                modifier = Modifier.weight(1f)
+            )
+            // 动画 → 动漫模块（番剧索引/排行/时间线）
+            3 -> AnimeTabContent(
+                onSeasonClick = onSeasonClick,
+                modifier = Modifier.weight(1f)
+            )
+            // 影视/新征程 → 占位
+            else -> ComingSoon(modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun ComingSoon(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "该模块开发中…",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
