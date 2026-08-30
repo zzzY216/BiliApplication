@@ -22,6 +22,7 @@ import com.software.core.model.pgc.PgcIndexItem
 import com.software.core.model.pgc.PgcRankItem
 import com.software.core.model.pgc.TimelineEpisode
 import com.software.designsystem.BiliColors
+import com.software.home.util.formatShortCount
 
 /**
  * 通用番剧卡片：横向布局（封面 3:4 + 标题/角标/副标题），索引/排行/时间线共用。
@@ -123,16 +124,3 @@ fun SeasonCard(
 /** 从 bangumi 详情链接解析 season id，如 ".../bangumi/play/ss12345" -> 12345 */
 fun seasonIdFromBangumiUrl(url: String?): Long? =
     url?.let { Regex("ss(\\d+)").find(it)?.groupValues?.get(1)?.toLongOrNull() }
-
-/** 数字缩写：12345 -> "1.2万"、123456789 -> "1.2亿" */
-fun formatShortCount(count: Long?): String {
-    if (count == null) return ""
-    return when {
-        count >= 100_000_000 -> trimZero("%.1f".format(count / 100_000_000.0)) + "亿"
-        count >= 10_000 -> trimZero("%.1f".format(count / 10_000.0)) + "万"
-        else -> count.toString()
-    }
-}
-
-private fun trimZero(s: String): String =
-    s.trimEnd('0').trimEnd('.')

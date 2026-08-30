@@ -3,6 +3,13 @@ package com.software.core.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/** 视频宽高（瀑布流卡片用真实比例做参差高度） */
+@Serializable
+data class VideoDimension(
+    val width: Int? = null,
+    val height: Int? = null,
+)
+
 @Serializable
 data class RecommendData(
     val config: RecommendConfig? = null,
@@ -18,7 +25,8 @@ data class RecommendItem(
     @SerialName("cover_left_1_content_description") val coverLeft1ContentDescription: String? = "", // 观看次数
     @SerialName("cover_left_2_content_description") val coverLeft2ContentDescription: String? = "", // 弹幕数据
     @SerialName("cover_right_content_description") val coverRightContentDescription: String? = "", // 时长
-    @SerialName("player_args") val playerArgs: PlayerArgs? = null
+    @SerialName("player_args") val playerArgs: PlayerArgs? = null,
+    val dimension: VideoDimension? = null   // 瀑布流宽高比
 )
 
 @Serializable
