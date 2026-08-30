@@ -6,8 +6,9 @@ import com.software.core.model.pgc.PgcCommunityData
 import com.software.core.model.pgc.PgcIndexData
 import com.software.core.model.pgc.PgcPlayUrlResponse
 import com.software.core.model.pgc.PgcRankData
-import com.software.core.model.pgc.PgcTimelineData
+import com.software.core.model.pgc.PgcResultResponse
 import com.software.core.model.pgc.SeasonDetailResponse
+import com.software.core.model.pgc.TimelineResult
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -21,12 +22,13 @@ import retrofit2.http.QueryMap
  */
 interface PgcApiService {
 
-    /** 番剧索引-结果（分页） */
+    /** 番剧索引-结果（分页）。type 必传（PiliPlus 固定 0，缺省会 -400 请求错误） */
     @GET("pgc/season/index/result")
     suspend fun getIndexResult(
         @Query("page") page: Int,
         @Query("pagesize") pageSize: Int,
         @Query("season_type") seasonType: Int,
+        @Query("type") type: Int = 0,
         @Query("order") order: Int = 3,     // 3 更新时间
         @Query("sort") sort: Int = 0,
         @Query("year") year: Int? = null,
@@ -34,19 +36,19 @@ interface PgcApiService {
         @Query("is_finish") isFinish: Int? = null,
     ): BiliResponse<PgcIndexData>
 
-    /** 番剧排行（需 WBI 签名，签名后的参数整体传入） */
+    /** 番剧排行（需 WBI 签名；返回体为顶层 result.list，无 data 包装） */
     @GET("pgc/web/rank/list")
     suspend fun getRank(
         @QueryMap params: Map<String, String>,
-    ): BiliResponse<PgcRankData>
+    ): PgcResultResponse<PgcRankData>
 
-    /** 新番时间线（types: 1 番剧 / 4 国创） */
+    /** 新番时间线（types: 1 番剧 / 4 国创；返回体为顶层 result，无 data 包装） */
     @GET("pgc/web/timeline")
     suspend fun getTimeline(
         @Query("types") types: Int,
         @Query("before") before: Int = 7,
         @Query("after") after: Int = 7,
-    ): BiliResponse<PgcTimelineData>
+    ): PgcResultResponse<List<TimelineResult>>
 
     /** 剧集明细 */
     @GET("pgc/view/web/season")

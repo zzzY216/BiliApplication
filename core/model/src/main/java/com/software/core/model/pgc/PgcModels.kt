@@ -62,9 +62,12 @@ data class PgcNewEp(
 
 // ---------- 列表：新番时间线 ----------
 
+/** PGC 通用返回（时间线/排行等：字段在顶层 result，无 data 包装，与 BiliResponse 不同） */
 @Serializable
-data class PgcTimelineData(
-    val result: List<TimelineResult>? = null,
+data class PgcResultResponse<T>(
+    val code: Int,
+    val message: String,
+    val result: T? = null,
 )
 
 /** /pgc/web/timeline 的 result 元素（按日分组） */

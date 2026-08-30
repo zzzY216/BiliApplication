@@ -74,7 +74,7 @@ class BangumiRepositoryImpl @Inject constructor(
             )
             val response = pgcApiService.getRank(signed)
             if (response.code == 0) {
-                Result.success(response.data?.list.orEmpty())
+                Result.success(response.result?.list.orEmpty())
             } else {
                 Result.failure(BiliApiException(response.code, response.message))
             }
@@ -87,9 +87,18 @@ class BangumiRepositoryImpl @Inject constructor(
         types: Int,
         before: Int,
         after: Int,
-    ): Result<List<TimelineResult>> =
-        biliApiCall { pgcApiService.getTimeline(types, before, after) }
-            .map { it.result.orEmpty() }
+    ): Result<List<TimelineResult>> {
+        return try {
+            val response = pgcApiService.getTimeline(types, before, after)
+            if (response.code == 0) {
+                Result.success(response.result.orEmpty())
+            } else {
+                Result.failure(BiliApiException(response.code, response.message))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
     override suspend fun getSeasonDetail(seasonId: Long): Result<SeasonDetail> =
         biliApiCall { pgcApiService.getSeasonDetail(seasonId) }
